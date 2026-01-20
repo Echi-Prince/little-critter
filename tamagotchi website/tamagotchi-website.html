@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TamaGOTCHii — Pocket Pet</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">◎</div>
+      <div>
+        <div class="brand-title">TamaGOTCHii</div>
+        <div class="brand-sub">Pocket Pet • Retro Web</div>
+      </div>
+    </div>
+
+    <div class="toggles">
+      <button id="toggleSound" class="chip" type="button" aria-pressed="false">
+        Sound: OFF
+      </button>
+      <button id="resetBtn" class="chip danger" type="button">
+        Reset
+      </button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="device">
+      <div class="device-top">
+        <div class="status-lights" aria-hidden="true">
+          <span class="light"></span>
+          <span class="light"></span>
+          <span class="light"></span>
+        </div>
+
+        <div class="pet-meta">
+          <div class="meta-line">
+            <span class="label">Name</span>
+            <span id="petName" class="value">Mochi</span>
+          </div>
+          <div class="meta-line">
+            <span class="label">Mood</span>
+            <span id="petMood" class="value">Chill</span>
+          </div>
+          <div class="meta-line">
+            <span class="label">Age</span>
+            <span id="petAge" class="value">0d 00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-wrap">
+        <div class="screen">
+          <div class="scanlines" aria-hidden="true"></div>
+
+          <div class="screen-header">
+            <div class="lcd-title">LIFE STATUS</div>
+            <div id="clock" class="lcd-clock">--:--:--</div>
+          </div>
+
+          <div class="pet-area" role="img" aria-label="Your pixel pet lives here">
+            <div id="pet" class="pet idle" aria-hidden="true"></div>
+            <div id="bubble" class="bubble hidden" aria-hidden="true"></div>
+          </div>
+
+          <div class="meters">
+            <div class="meter">
+              <div class="meter-label">Hunger</div>
+              <div class="bar"><div id="barHunger" class="fill"></div></div>
+            </div>
+            <div class="meter">
+              <div class="meter-label">Happiness</div>
+              <div class="bar"><div id="barHappy" class="fill"></div></div>
+            </div>
+            <div class="meter">
+              <div class="meter-label">Energy</div>
+              <div class="bar"><div id="barEnergy" class="fill"></div></div>
+            </div>
+            <div class="meter">
+              <div class="meter-label">Clean</div>
+              <div class="bar"><div id="barClean" class="fill"></div></div>
+            </div>
+          </div>
+
+          <div class="log" aria-live="polite">
+            <div class="log-title">EVENT LOG</div>
+            <ul id="logList" class="log-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="control-row">
+          <button class="btn" id="feedBtn" type="button">Feed</button>
+          <button class="btn" id="playBtn" type="button">Play</button>
+          <button class="btn" id="sleepBtn" type="button">Sleep</button>
+          <button class="btn" id="cleanBtn" type="button">Clean</button>
+        </div>
+
+        <div class="control-row secondary">
+          <div class="wallet">
+            <span class="label">Coins</span>
+            <span id="coins" class="value">0</span>
+          </div>
+
+          <div class="namebox">
+            <label for="nameInput" class="label">Rename</label>
+            <input id="nameInput" type="text" maxlength="12" placeholder="Type name…" />
+            <button class="btn small" id="renameBtn" type="button">OK</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <section class="card">
+        <h2>Shop</h2>
+        <p class="muted">Buy treats and toys for quick boosts.</p>
+
+        <div class="shop">
+          <button class="shop-item" data-item="snack" type="button">
+            <div class="shop-ico" aria-hidden="true">🍬</div>
+            <div class="shop-info">
+              <div class="shop-name">Snack</div>
+              <div class="shop-desc">+Hunger, +Happy</div>
+            </div>
+            <div class="shop-price">5</div>
+          </button>
+
+          <button class="shop-item" data-item="toy" type="button">
+            <div class="shop-ico" aria-hidden="true">🪀</div>
+            <div class="shop-info">
+              <div class="shop-name">Toy</div>
+              <div class="shop-desc">+Happy</div>
+            </div>
+            <div class="shop-price">7</div>
+          </button>
+
+          <button class="shop-item" data-item="battery" type="button">
+            <div class="shop-ico" aria-hidden="true">🔋</div>
+            <div class="shop-info">
+              <div class="shop-name">Battery</div>
+              <div class="shop-desc">+Energy</div>
+            </div>
+            <div class="shop-price">6</div>
+          </button>
+
+          <button class="shop-item" data-item="soap" type="button">
+            <div class="shop-ico" aria-hidden="true">🧼</div>
+            <div class="shop-info">
+              <div class="shop-name">Soap</div>
+              <div class="shop-desc">+Clean</div>
+            </div>
+            <div class="shop-price">4</div>
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>How it works</h2>
+        <ul class="tips">
+          <li>Stats slowly decrease over time.</li>
+          <li>Keep everything above 30% to avoid “grumpy mode.”</li>
+          <li>You earn coins by playing and caring for your pet.</li>
+          <li>Your progress saves automatically.</li>
+        </ul>
+
+        <div class="badge-row">
+          <span class="badge">Pixel UI</span>
+          <span class="badge">Local Save</span>
+          <span class="badge">No Libraries</span>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span class="muted">Made with HTML + CSS + JS • TamaGOTCHii is a fan-styled tribute UI.</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
