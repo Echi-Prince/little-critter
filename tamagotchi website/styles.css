@@ -279,8 +279,14 @@ body{
   place-items:center;
   background: rgba(14,37,22,.12);
   backdrop-filter: blur(2px);
-  z-index: 5;
+  z-index: 999;              /* ensure it's above scanlines, etc */
+  pointer-events: auto;      /* allow clicks inside modal */
 }
+/* Make sure hidden truly removes it from interaction */
+.modal.hidden{
+  display:none !important;
+}
+
 .modal-card{
   width: min(420px, 92%);
   border-radius: 16px;
