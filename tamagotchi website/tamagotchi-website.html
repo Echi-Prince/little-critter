@@ -63,7 +63,9 @@
           </div>
 
           <div class="pet-area" role="img" aria-label="Your pixel pet lives here">
-            <div id="pet" class="pet idle" aria-hidden="true"></div>
+            <div id="pet" class="pet idle skin-mint" aria-hidden="true">
+              <div id="petCosmetic" class="cosmetic" aria-hidden="true"></div>
+            </div>
             <div id="bubble" class="bubble hidden" aria-hidden="true"></div>
           </div>
 
@@ -117,11 +119,37 @@
     </section>
 
     <aside class="panel">
+      <!-- WEATHER -->
+      <section class="card">
+        <h2>Weather</h2>
+        <p class="muted">Type a city. Uses Open-Meteo (no API key).</p>
+
+        <div class="weather-ui">
+          <input id="cityInput" type="text" placeholder="e.g., New York" />
+          <button id="weatherBtn" class="btn small" type="button">Check</button>
+        </div>
+
+        <div id="weatherOut" class="weather-out muted">—</div>
+      </section>
+
+      <!-- MINIGAMES -->
+      <section class="card">
+        <h2>Minigames</h2>
+        <p class="muted">Earn coins by playing.</p>
+
+        <div class="game-buttons">
+          <button id="openCoinCatch" class="btn" type="button">Coin Catch</button>
+          <button id="openMemory" class="btn" type="button">Memory Match</button>
+        </div>
+      </section>
+
+      <!-- SHOP -->
       <section class="card">
         <h2>Shop</h2>
-        <p class="muted">Buy treats and toys for quick boosts.</p>
+        <p class="muted">Buy boosts + cosmetics. Equip cosmetics after purchase.</p>
 
         <div class="shop">
+          <!-- boosts -->
           <button class="shop-item" data-item="snack" type="button">
             <div class="shop-ico" aria-hidden="true">🍬</div>
             <div class="shop-info">
@@ -158,25 +186,133 @@
             <div class="shop-price">4</div>
           </button>
         </div>
+
+        <hr class="sep" />
+
+        <h3 class="subhead">Cosmetics</h3>
+        <div class="shop">
+          <button class="shop-item" data-item="cos_hat" type="button">
+            <div class="shop-ico" aria-hidden="true">🎩</div>
+            <div class="shop-info">
+              <div class="shop-name">Top Hat</div>
+              <div class="shop-desc">Equipable hat</div>
+            </div>
+            <div class="shop-price">20</div>
+          </button>
+
+          <button class="shop-item" data-item="cos_bow" type="button">
+            <div class="shop-ico" aria-hidden="true">🎀</div>
+            <div class="shop-info">
+              <div class="shop-name">Bow</div>
+              <div class="shop-desc">Equipable bow</div>
+            </div>
+            <div class="shop-price">15</div>
+          </button>
+
+          <button class="shop-item" data-item="skin_cotton" type="button">
+            <div class="shop-ico" aria-hidden="true">🟣</div>
+            <div class="shop-info">
+              <div class="shop-name">Skin: Cotton</div>
+              <div class="shop-desc">Purple vibe</div>
+            </div>
+            <div class="shop-price">12</div>
+          </button>
+
+          <button class="shop-item" data-item="skin_ocean" type="button">
+            <div class="shop-ico" aria-hidden="true">🔵</div>
+            <div class="shop-info">
+              <div class="shop-name">Skin: Ocean</div>
+              <div class="shop-desc">Blue vibe</div>
+            </div>
+            <div class="shop-price">12</div>
+          </button>
+
+          <button class="shop-item" data-item="frame_gold" type="button">
+            <div class="shop-ico" aria-hidden="true">🟡</div>
+            <div class="shop-info">
+              <div class="shop-name">Frame: Gold</div>
+              <div class="shop-desc">LCD frame tint</div>
+            </div>
+            <div class="shop-price">18</div>
+          </button>
+        </div>
+
+        <div class="equip">
+          <div class="muted">Equip:</div>
+          <button class="btn small" id="equipNone" type="button">None</button>
+          <button class="btn small" id="equipHat" type="button">Hat</button>
+          <button class="btn small" id="equipBow" type="button">Bow</button>
+          <button class="btn small" id="equipMint" type="button">Mint</button>
+          <button class="btn small" id="equipCotton" type="button">Cotton</button>
+          <button class="btn small" id="equipOcean" type="button">Ocean</button>
+          <button class="btn small" id="equipGoldFrame" type="button">Gold Frame</button>
+        </div>
       </section>
 
       <section class="card">
         <h2>How it works</h2>
         <ul class="tips">
           <li>Stats slowly decrease over time.</li>
-          <li>Keep everything above 30% to avoid “grumpy mode.”</li>
-          <li>You earn coins by playing and caring for your pet.</li>
-          <li>Your progress saves automatically.</li>
+          <li>Minigames earn coins faster.</li>
+          <li>Cosmetics persist via local save.</li>
+          <li>Weather caches for 10 minutes per city.</li>
         </ul>
 
         <div class="badge-row">
           <span class="badge">Pixel UI</span>
-          <span class="badge">Local Save</span>
-          <span class="badge">No Libraries</span>
+          <span class="badge">Minigames</span>
+          <span class="badge">Weather</span>
         </div>
       </section>
     </aside>
   </main>
+
+  <!-- ===== MODALS ===== -->
+  <div id="modalBackdrop" class="backdrop hidden" aria-hidden="true"></div>
+
+  <!-- Coin Catch Modal -->
+  <div id="coinModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="coinTitle">
+    <div class="modal-head">
+      <div>
+        <div id="coinTitle" class="modal-title">Coin Catch</div>
+        <div class="muted">Click coins before time runs out. Win coins based on score.</div>
+      </div>
+      <button class="chip" id="closeCoinModal" type="button">Close</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="game-hud">
+        <div><b>Time:</b> <span id="ccTime">15</span>s</div>
+        <div><b>Score:</b> <span id="ccScore">0</span></div>
+        <button class="btn small" id="ccStart" type="button">Start</button>
+      </div>
+
+      <div id="coinField" class="coin-field" aria-label="Game area"></div>
+      <div id="ccResult" class="muted">—</div>
+    </div>
+  </div>
+
+  <!-- Memory Match Modal -->
+  <div id="memoryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memTitle">
+    <div class="modal-head">
+      <div>
+        <div id="memTitle" class="modal-title">Memory Match</div>
+        <div class="muted">Match pairs. Faster = more coins.</div>
+      </div>
+      <button class="chip" id="closeMemoryModal" type="button">Close</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="game-hud">
+        <div><b>Moves:</b> <span id="mmMoves">0</span></div>
+        <div><b>Matched:</b> <span id="mmMatched">0</span>/8</div>
+        <button class="btn small" id="mmStart" type="button">New Game</button>
+      </div>
+
+      <div id="memoryGrid" class="memory-grid"></div>
+      <div id="mmResult" class="muted">—</div>
+    </div>
+  </div>
 
   <footer class="footer">
     <span class="muted">Made with HTML + CSS + JS • TamaGOTCHii is a fan-styled tribute UI.</span>
