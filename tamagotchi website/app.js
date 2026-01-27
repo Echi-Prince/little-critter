@@ -1,124 +1,108 @@
-const $ = s => document.querySelector(s);
+/* TamaGOTCHii (stable rebuild)
+   - Stats, actions, decay, event log
+   - Mini-games (Coin Pop + Reaction) for coins
+   - Shop: boosts + cosmetics (buy once, equip)
+   - Weather by city (Open-Meteo; no key)
+   - localStorage persistence
+   - Modal never starts open; can close via X / ESC / click outside
+*/
+
+const $ = (sel) => document.querySelector(sel);
 
 const els = {
+  device: $("#device"),
   pet: $("#pet"),
   bubble: $("#bubble"),
-  coins: $("#coins"),
-  coinsMini: $("#coinsMini"),
+  name: $("#petName"),
   mood: $("#petMood"),
   age: $("#petAge"),
   clock: $("#clock"),
-  bars: {
-    hunger: $("#barHunger"),
-    happy: $("#barHappy"),
-    energy: $("#barEnergy"),
-    clean: $("#barClean")
-  },
+
+  barHunger: $("#barHunger"),
+  barHappy: $("#barHappy"),
+  barEnergy: $("#barEnergy"),
+  barClean: $("#barClean"),
+
   log: $("#logList"),
+  coins: $("#coins"),
+  coinsMini: $("#coinsMini"),
+
+  feedBtn: $("#feedBtn"),
+  playBtn: $("#playBtn"),
+  sleepBtn: $("#sleepBtn"),
+  cleanBtn: $("#cleanBtn"),
+  gamesBtn: $("#gamesBtn"),
+
+  nameInput: $("#nameInput"),
+  renameBtn: $("#renameBtn"),
+
+  toggleSound: $("#toggleSound"),
+  resetBtn: $("#resetBtn"),
+
+  shopBoosts: $("#shopBoosts"),
+  shopCos: $("#shopCos"),
+  tabBoosts: $("#tabBoosts"),
+  tabCos: $("#tabCos"),
+
   gameModal: $("#gameModal"),
+  closeGameModal: $("#closeGameModal"),
   gameHome: $("#gameHome"),
-  gameStage: $("#gameStage")
+  gameStage: $("#gameStage"),
+  backToGames: $("#backToGames"),
+  startCoinPop: $("#startCoinPop"),
+  startReaction: $("#startReaction"),
+
+  cityInput: $("#cityInput"),
+  weatherBtn: $("#weatherBtn"),
+  weatherCity: $("#weatherCity"),
+  weatherNow: $("#weatherNow"),
+  weatherTemp: $("#weatherTemp"),
+  weatherWind: $("#weatherWind"),
+  weatherMsg: $("#weatherMsg"),
 };
 
-let state = {
-  coins: 10,
-  hunger: 80,
-  happy: 80,
-  energy: 80,
-  clean: 80,
-  created: Date.now()
-};
+const STORAGE_KEY = "tamagotchii_state_stable_v3";
 
-/* ---------- helpers ---------- */
-function clamp(v){ return Math.max(0,Math.min(100,v)); }
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const now = () => Date.now();
 
-function log(msg){
-  const li=document.createElement("li");
-  li.textContent=msg;
-  els.log.prepend(li);
+function pad2(x){ return String(x).padStart(2,"0"); }
+function formatClock(d = new Date()) {
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+function formatAge(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const rem = totalSec % 86400;
+  const hh = Math.floor(rem / 3600);
+  const mm = Math.floor((rem % 3600) / 60);
+  return `${days}d ${pad2(hh)}:${pad2(mm)}`;
 }
 
-function render(){
-  els.coins.textContent=state.coins;
-  els.coinsMini.textContent=state.coins;
-  els.bars.hunger.style.width=state.hunger+"%";
-  els.bars.happy.style.width=state.happy+"%";
-  els.bars.energy.style.width=state.energy+"%";
-  els.bars.clean.style.width=state.clean+"%";
+/* ===== Audio (optional) ===== */
+let audioCtx = null;
+let soundOn = false;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
+function beep(freq = 880, dur = 0.06, type = "square", gain = 0.05) {
+  if (!soundOn) return;
+  ensureAudio();
+  const t = audioCtx.currentTime;
 
-function tick(){
-  state.hunger=clamp(state.hunger-0.1);
-  state.happy=clamp(state.happy-0.07);
-  state.energy=clamp(state.energy-0.05);
-  state.clean=clamp(state.clean-0.04);
-  els.clock.textContent=new Date().toLocaleTimeString();
-  render();
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.01);
+  g.gain.linearRampToValueAtTime(0, t + dur);
+
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + dur + 0.02);
 }
-
-/* ---------- mini games ---------- */
-function openGames(){
-  els.gameModal.classList.remove("hidden");
-  els.gameHome.classList.remove("hidden");
-  els.gameStage.classList.add("hidden");
-}
-
-function closeGames(){
-  els.gameModal.classList.add("hidden");
-  els.gameStage.innerHTML="";
-}
-
-$("#gamesBtn").onclick=openGames;
-$("#closeGameModal").onclick=closeGames;
-$("#backToGames").onclick=()=> {
-  els.gameStage.classList.add("hidden");
-  els.gameHome.classList.remove("hidden");
-};
-
-$("#startCoinPop").onclick=()=>{
-  els.gameHome.classList.add("hidden");
-  els.gameStage.classList.remove("hidden");
-  els.gameStage.innerHTML="<button id='hit'>HIT!</button>";
-  let score=0;
-  $("#hit").onclick=()=>score++;
-  setTimeout(()=>{
-    state.coins+=score;
-    log(`Coin Pop: +${score}`);
-    closeGames();
-    render();
-  },5000);
-};
-
-$("#startReaction").onclick=()=>{
-  els.gameHome.classList.add("hidden");
-  els.gameStage.classList.remove("hidden");
-  els.gameStage.innerHTML="<div id='rx'>WAIT</div>";
-  const start=Date.now()+1000+Math.random()*2000;
-  const rx=$("#rx");
-  const t=setInterval(()=>{
-    if(Date.now()>start){
-      rx.textContent="GO!";
-      rx.onclick=()=>{
-        const dt=Date.now()-start;
-        const reward=dt<300?6:dt<500?4:2;
-        state.coins+=reward;
-        log(`Reaction ${dt}ms: +${reward}`);
-        clearInterval(t);
-        closeGames();
-        render();
-      };
-      clearInterval(t);
-    }
-  },50);
-};
-
-/* ---------- buttons ---------- */
-$("#feedBtn").onclick=()=>{state.hunger+=15; log("Fed"); render();};
-$("#playBtn").onclick=()=>{state.happy+=15; state.coins+=1; log("Played"); render();};
-$("#sleepBtn").onclick=()=>{state.energy+=20; log("Slept"); render();};
-$("#cleanBtn").onclick=()=>{state.clean+=20; log("Cleaned"); render();};
-
-/* ---------- init ---------- */
-els.gameModal.classList.add("hidden");
-setInterval(tick,1000);
-render();
+const blip = () => beep(880, 0.05
