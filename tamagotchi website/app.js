@@ -1,108 +1,119 @@
-/* TamaGOTCHii (stable rebuild)
-   - Stats, actions, decay, event log
-   - Mini-games (Coin Pop + Reaction) for coins
-   - Shop: boosts + cosmetics (buy once, equip)
-   - Weather by city (Open-Meteo; no key)
-   - localStorage persistence
-   - Modal never starts open; can close via X / ESC / click outside
-*/
+const $ = id => document.getElementById(id);
 
-const $ = (sel) => document.querySelector(sel);
-
-const els = {
-  device: $("#device"),
-  pet: $("#pet"),
-  bubble: $("#bubble"),
-  name: $("#petName"),
-  mood: $("#petMood"),
-  age: $("#petAge"),
-  clock: $("#clock"),
-
-  barHunger: $("#barHunger"),
-  barHappy: $("#barHappy"),
-  barEnergy: $("#barEnergy"),
-  barClean: $("#barClean"),
-
-  log: $("#logList"),
-  coins: $("#coins"),
-  coinsMini: $("#coinsMini"),
-
-  feedBtn: $("#feedBtn"),
-  playBtn: $("#playBtn"),
-  sleepBtn: $("#sleepBtn"),
-  cleanBtn: $("#cleanBtn"),
-  gamesBtn: $("#gamesBtn"),
-
-  nameInput: $("#nameInput"),
-  renameBtn: $("#renameBtn"),
-
-  toggleSound: $("#toggleSound"),
-  resetBtn: $("#resetBtn"),
-
-  shopBoosts: $("#shopBoosts"),
-  shopCos: $("#shopCos"),
-  tabBoosts: $("#tabBoosts"),
-  tabCos: $("#tabCos"),
-
-  gameModal: $("#gameModal"),
-  closeGameModal: $("#closeGameModal"),
-  gameHome: $("#gameHome"),
-  gameStage: $("#gameStage"),
-  backToGames: $("#backToGames"),
-  startCoinPop: $("#startCoinPop"),
-  startReaction: $("#startReaction"),
-
-  cityInput: $("#cityInput"),
-  weatherBtn: $("#weatherBtn"),
-  weatherCity: $("#weatherCity"),
-  weatherNow: $("#weatherNow"),
-  weatherTemp: $("#weatherTemp"),
-  weatherWind: $("#weatherWind"),
-  weatherMsg: $("#weatherMsg"),
+/* ---------- STATE ---------- */
+const state = {
+  coins: 10,
+  hunger: 80,
+  happy: 80,
+  energy: 80,
+  hatOwned: false
 };
 
-const STORAGE_KEY = "tamagotchii_state_stable_v3";
+/* ---------- ELEMENTS ---------- */
+const pet = $("pet");
+const bubble = $("bubble");
+const coinsEl = $("coins");
 
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-const now = () => Date.now();
+const hunger = $("hunger");
+const happy = $("happy");
+const energy = $("energy");
 
-function pad2(x){ return String(x).padStart(2,"0"); }
-function formatClock(d = new Date()) {
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+const modal = $("modal");
+
+/* ---------- RENDER ---------- */
+function render() {
+  coinsEl.textContent = state.coins;
+  hunger.value = state.hunger;
+  happy.value = state.happy;
+  energy.value = state.energy;
 }
-function formatAge(ms) {
-  const totalSec = Math.floor(ms / 1000);
-  const days = Math.floor(totalSec / 86400);
-  const rem = totalSec % 86400;
-  const hh = Math.floor(rem / 3600);
-  const mm = Math.floor((rem % 3600) / 60);
-  return `${days}d ${pad2(hh)}:${pad2(mm)}`;
-}
+render();
 
-/* ===== Audio (optional) ===== */
-let audioCtx = null;
-let soundOn = false;
+/* ---------- CORE ACTIONS ---------- */
+$("feedBtn").onclick = () => {
+  state.hunger = Math.min(100, state.hunger + 15);
+  bubble.textContent = "Nom!";
+  render();
+};
 
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-function beep(freq = 880, dur = 0.06, type = "square", gain = 0.05) {
-  if (!soundOn) return;
-  ensureAudio();
-  const t = audioCtx.currentTime;
+$("playBtn").onclick = () => {
+  state.happy = Math.min(100, state.happy + 15);
+  state.coins += 1;
+  bubble.textContent = "Yay!";
+  render();
+};
 
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
+$("sleepBtn").onclick = () => {
+  state.energy = Math.min(100, state.energy + 20);
+  bubble.textContent = "Zzz...";
+  render();
+};
 
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(gain, t + 0.01);
-  g.gain.linearRampToValueAtTime(0, t + dur);
+/* ---------- SHOP ---------- */
+document.querySelector("[data-item='hat']").onclick = () => {
+  if (state.hatOwned) {
+    pet.dataset.hat = "hat";
+    bubble.textContent = "Hat equipped!";
+    return;
+  }
 
-  osc.connect(g);
-  g.connect(audioCtx.destination);
-  osc.start(t);
-  osc.stop(t + dur + 0.02);
-}
-const blip = () => beep(880, 0.05
+  if (state.coins < 10) {
+    bubble.textContent = "Not enough coins!";
+    return;
+  }
+
+  state.coins -= 10;
+  state.hatOwned = true;
+  pet.dataset.hat = "hat";
+  bubble.textContent = "Bought a hat!";
+  render();
+};
+
+/* ---------- MINI GAME ---------- */
+$("gamesBtn").onclick = () => {
+  modal.classList.remove("hidden");
+};
+
+$("closeModal").onclick = () => {
+  modal.classList.add("hidden");
+};
+
+$("tapBtn").onclick = () => {
+  state.coins += 1;
+  bubble.textContent = "+1 coin!";
+  render();
+};
+
+/* ---------- WEATHER ---------- */
+$("weatherBtn").onclick = async () => {
+  const city = $("cityInput").value.trim();
+  if (!city) return;
+
+  try {
+    const geo = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`
+    ).then(r => r.json());
+
+    if (!geo.results) throw new Error("City not found");
+
+    const { latitude, longitude, name } = geo.results[0];
+
+    const weather = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+    ).then(r => r.json());
+
+    const w = weather.current_weather;
+    $("weatherResult").textContent =
+      `${name}: ${w.temperature}°C, wind ${w.windspeed} km/h`;
+  } catch {
+    $("weatherResult").textContent = "Weather lookup failed";
+  }
+};
+
+/* ---------- DECAY LOOP ---------- */
+setInterval(() => {
+  state.hunger = Math.max(0, state.hunger - 0.1);
+  state.happy = Math.max(0, state.happy - 0.07);
+  state.energy = Math.max(0, state.energy - 0.05);
+  render();
+}, 1000);
