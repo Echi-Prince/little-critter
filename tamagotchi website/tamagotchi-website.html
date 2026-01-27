@@ -1,227 +1,115 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TamaGOTCHii — Pocket Pet</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>TamaGOTCHii</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-grid"></div>
 
   <header class="topbar">
     <div class="brand">
-      <div class="logo" aria-hidden="true">◎</div>
+      <div class="logo">◎</div>
       <div>
         <div class="brand-title">TamaGOTCHii</div>
-        <div class="brand-sub">Pocket Pet • Retro Web</div>
+        <div class="brand-sub">Pocket Pet</div>
       </div>
     </div>
-
     <div class="toggles">
-      <button id="toggleSound" class="chip" type="button" aria-pressed="false">
-        Sound: OFF
-      </button>
-      <button id="resetBtn" class="chip danger" type="button">
-        Reset
-      </button>
+      <button id="toggleSound" class="chip">Sound: OFF</button>
+      <button id="resetBtn" class="chip danger">Reset</button>
     </div>
   </header>
 
   <main class="shell">
     <section class="device" id="device">
       <div class="device-top">
-        <div class="status-lights" aria-hidden="true">
-          <span class="light"></span>
-          <span class="light"></span>
-          <span class="light"></span>
+        <div class="status-lights">
+          <span class="light"></span><span class="light"></span><span class="light"></span>
         </div>
-
         <div class="pet-meta">
-          <div class="meta-line">
-            <span class="label">Name</span>
-            <span id="petName" class="value">Mochi</span>
-          </div>
-          <div class="meta-line">
-            <span class="label">Mood</span>
-            <span id="petMood" class="value">Chill</span>
-          </div>
-          <div class="meta-line">
-            <span class="label">Age</span>
-            <span id="petAge" class="value">0d 00:00</span>
-          </div>
+          <div>Name <span id="petName">Mochi</span></div>
+          <div>Mood <span id="petMood">Chill</span></div>
+          <div>Age <span id="petAge">0d 00:00</span></div>
         </div>
       </div>
 
       <div class="screen-wrap">
         <div class="screen">
-          <div class="scanlines" aria-hidden="true"></div>
+          <div class="scanlines"></div>
 
           <div class="screen-header">
-            <div class="lcd-title">LIFE STATUS</div>
-            <div id="clock" class="lcd-clock">--:--:--</div>
+            <div>LIFE STATUS</div>
+            <div id="clock">--:--:--</div>
           </div>
 
-          <div class="pet-area" role="img" aria-label="Your pixel pet lives here">
-            <div id="pet" class="pet idle" data-acc="none" aria-hidden="true">
-              <div id="petAcc" class="pet-acc" aria-hidden="true"></div>
+          <div class="pet-area">
+            <div id="pet" class="pet idle" data-acc="none">
+              <div class="pet-acc"></div>
             </div>
-            <div id="bubble" class="bubble hidden" aria-hidden="true"></div>
+            <div id="bubble" class="bubble hidden"></div>
 
-            <!-- Mini-game modal lives INSIDE the screen -->
-            <div id="gameModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Mini games">
+            <!-- MINI GAME MODAL -->
+            <div id="gameModal" class="modal hidden">
               <div class="modal-card">
                 <div class="modal-head">
-                  <div class="modal-title">MINI GAMES</div>
-                  <button id="closeGameModal" class="xbtn" type="button" aria-label="Close">×</button>
+                  <strong>MINI GAMES</strong>
+                  <button id="closeGameModal" class="xbtn">×</button>
                 </div>
 
-                <div id="gameHome" class="game-home">
-                  <p class="muted small">Play games to earn coins. Faster = more rewards.</p>
-                  <div class="game-grid">
-                    <button id="startCoinPop" class="game-tile" type="button">
-                      <div class="gt-title">Coin Pop</div>
-                      <div class="gt-desc">Tap coins fast (10s)</div>
-                    </button>
-                    <button id="startReaction" class="game-tile" type="button">
-                      <div class="gt-title">Reaction</div>
-                      <div class="gt-desc">Tap when it says GO</div>
-                    </button>
-                  </div>
+                <div id="gameHome">
+                  <button id="startCoinPop" class="game-tile">Coin Pop</button>
+                  <button id="startReaction" class="game-tile">Reaction</button>
                 </div>
 
-                <div id="gameStage" class="game-stage hidden">
-                  <!-- JS injects game UI here -->
-                </div>
+                <div id="gameStage" class="hidden"></div>
 
                 <div class="modal-foot">
-                  <div class="modal-coins">
-                    <span class="label">Coins</span>
-                    <span id="coinsMini" class="value">0</span>
-                  </div>
-                  <button id="backToGames" class="btn small" type="button">Back</button>
+                  <div>Coins: <span id="coinsMini">0</span></div>
+                  <button id="backToGames" class="btn small">Back</button>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="meters">
-            <div class="meter">
-              <div class="meter-label">Hunger</div>
-              <div class="bar"><div id="barHunger" class="fill"></div></div>
-            </div>
-            <div class="meter">
-              <div class="meter-label">Happiness</div>
-              <div class="bar"><div id="barHappy" class="fill"></div></div>
-            </div>
-            <div class="meter">
-              <div class="meter-label">Energy</div>
-              <div class="bar"><div id="barEnergy" class="fill"></div></div>
-            </div>
-            <div class="meter">
-              <div class="meter-label">Clean</div>
-              <div class="bar"><div id="barClean" class="fill"></div></div>
-            </div>
+            <div>Hunger <div class="bar"><div id="barHunger" class="fill"></div></div></div>
+            <div>Happy <div class="bar"><div id="barHappy" class="fill"></div></div></div>
+            <div>Energy <div class="bar"><div id="barEnergy" class="fill"></div></div></div>
+            <div>Clean <div class="bar"><div id="barClean" class="fill"></div></div></div>
           </div>
 
-          <div class="log" aria-live="polite">
-            <div class="log-title">EVENT LOG</div>
-            <ul id="logList" class="log-list"></ul>
-          </div>
+          <ul id="logList" class="log-list"></ul>
         </div>
       </div>
 
       <div class="controls">
-        <div class="control-row">
-          <button class="btn" id="feedBtn" type="button">Feed</button>
-          <button class="btn" id="playBtn" type="button">Play</button>
-          <button class="btn" id="sleepBtn" type="button">Sleep</button>
-          <button class="btn" id="cleanBtn" type="button">Clean</button>
-          <button class="btn" id="gamesBtn" type="button">Games</button>
-        </div>
-
-        <div class="control-row secondary">
-          <div class="wallet">
-            <span class="label">Coins</span>
-            <span id="coins" class="value">0</span>
-          </div>
-
-          <div class="namebox">
-            <label for="nameInput" class="label">Rename</label>
-            <input id="nameInput" type="text" maxlength="12" placeholder="Type name…" />
-            <button class="btn small" id="renameBtn" type="button">OK</button>
-          </div>
-        </div>
+        <button id="feedBtn" class="btn">Feed</button>
+        <button id="playBtn" class="btn">Play</button>
+        <button id="sleepBtn" class="btn">Sleep</button>
+        <button id="cleanBtn" class="btn">Clean</button>
+        <button id="gamesBtn" class="btn">Games</button>
+        <div>Coins: <span id="coins">0</span></div>
       </div>
     </section>
 
     <aside class="panel">
       <section class="card">
-        <h2>Shop</h2>
-        <p class="muted">Boost stats or buy cosmetics (owned items can be equipped).</p>
-
-        <div class="tabs">
-          <button id="tabBoosts" class="tab active" type="button">Boosts</button>
-          <button id="tabCos" class="tab" type="button">Cosmetics</button>
-        </div>
-
-        <div id="shopBoosts" class="shop"></div>
-        <div id="shopCos" class="shop hidden"></div>
-      </section>
-
-      <section class="card">
         <h2>Weather</h2>
-        <p class="muted">Enter a city and fetch current conditions.</p>
-
-        <div class="weather-row">
-          <input id="cityInput" type="text" placeholder="e.g., Raleigh" maxlength="40" />
-          <button id="weatherBtn" class="btn small" type="button">Check</button>
+        <input id="cityInput" placeholder="City"/>
+        <button id="weatherBtn" class="btn small">Check</button>
+        <div id="weatherBox">
+          <div id="weatherCity">—</div>
+          <div id="weatherNow">—</div>
+          <div id="weatherTemp">—</div>
+          <div id="weatherWind">—</div>
         </div>
-
-        <div id="weatherBox" class="weather-box">
-          <div class="wb-line">
-            <span class="label">City</span>
-            <span id="weatherCity" class="value">—</span>
-          </div>
-          <div class="wb-line">
-            <span class="label">Now</span>
-            <span id="weatherNow" class="value">—</span>
-          </div>
-          <div class="wb-line">
-            <span class="label">Temp</span>
-            <span id="weatherTemp" class="value">—</span>
-          </div>
-          <div class="wb-line">
-            <span class="label">Wind</span>
-            <span id="weatherWind" class="value">—</span>
-          </div>
-        </div>
-
-        <p id="weatherMsg" class="muted small"></p>
-      </section>
-
-      <section class="card">
-        <h2>How it works</h2>
-        <ul class="tips">
-          <li>Stats slowly decrease over time.</li>
-          <li>Keep everything above 30% to avoid “grumpy mode.”</li>
-          <li>Earn coins by playing and mini-games.</li>
-          <li>Your progress saves automatically.</li>
-        </ul>
-
-        <div class="badge-row">
-          <span class="badge">Pixel UI</span>
-          <span class="badge">Local Save</span>
-          <span class="badge">Mini Games</span>
-          <span class="badge">Weather</span>
-        </div>
+        <p id="weatherMsg"></p>
       </section>
     </aside>
   </main>
-
-  <footer class="footer">
-    <span class="muted">Made with HTML + CSS + JS • TamaGOTCHii is a fan-styled tribute UI.</span>
-  </footer>
 
   <script src="app.js"></script>
 </body>
