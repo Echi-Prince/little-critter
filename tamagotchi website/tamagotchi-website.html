@@ -1,60 +1,1864 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>TamaGOTCHii</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TamaBuddy — Mini Tamagotchi</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a33;
+      --panel2:#0f1630;
+      --text:#e8ecff;
+      --muted:#a8b1e6;
+      --good:#46e6a2;
+      --warn:#ffcc66;
+      --bad:#ff5b7a;
+      --accent:#8d7bff;
+      --accent2:#41d1ff;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1000px 700px at 20% 10%, rgba(141,123,255,.25), transparent 55%),
+        radial-gradient(900px 600px at 80% 20%, rgba(65,209,255,.18), transparent 55%),
+        radial-gradient(900px 800px at 50% 100%, rgba(70,230,162,.14), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      padding:18px;
+    }
+    .app{
+      width:min(1100px, 100%);
+      display:grid;
+      grid-template-columns: 1.35fr .95fr;
+      gap:16px;
+    }
+    @media (max-width: 920px){
+      .app{grid-template-columns:1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .header{
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.00));
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:40px; height:40px; border-radius:12px;
+      background:
+        radial-gradient(12px 12px at 30% 35%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%),
+        radial-gradient(18px 18px at 70% 65%, rgba(65,209,255,.55), rgba(65,209,255,0) 70%),
+        linear-gradient(135deg, rgba(141,123,255,.9), rgba(65,209,255,.7));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 8px 30px rgba(141,123,255,.25);
+    }
+    .brand h1{
+      font-size:16px; margin:0; letter-spacing:.3px;
+    }
+    .brand .sub{
+      font-size:12px; color:var(--muted); margin-top:2px;
+    }
+    .topstats{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .pill{
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(0,0,0,.18);
+      display:flex; align-items:center; gap:8px;
+      white-space:nowrap;
+    }
+    .pill b{ color: var(--text); font-weight:700; }
+    .main{
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      min-height: 640px;
+    }
+    .scene{
+      padding:16px 18px 12px 18px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 920px){
+      .scene{grid-template-columns:1fr}
+    }
+    .petbox{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      background:
+        radial-gradient(700px 220px at 50% 0%, rgba(141,123,255,.25), transparent 60%),
+        radial-gradient(600px 220px at 50% 100%, rgba(65,209,255,.20), transparent 60%),
+        rgba(0,0,0,.18);
+      overflow:hidden;
+      position:relative;
+      min-height: 280px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+    }
+    .pet-sky{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(2px 2px at 15% 20%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%),
+        radial-gradient(2px 2px at 60% 30%, rgba(255,255,255,.7), rgba(255,255,255,0) 60%),
+        radial-gradient(2px 2px at 80% 15%, rgba(255,255,255,.6), rgba(255,255,255,0) 60%),
+        radial-gradient(2px 2px at 35% 45%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%),
+        radial-gradient(700px 240px at 50% 0%, rgba(141,123,255,.18), transparent 55%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .floor{
+      height:70px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.0), rgba(0,0,0,.18)),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.06) 8px, rgba(255,255,255,0) 8px, rgba(255,255,255,0) 16px);
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .pet-wrap{
+      position:relative;
+      height:210px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+    }
+    .pet{
+      width:148px; height:148px;
+      border-radius: 38px 38px 44px 44px;
+      position:relative;
+      background:
+        radial-gradient(35px 35px at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%),
+        radial-gradient(60px 60px at 70% 70%, rgba(65,209,255,.22), rgba(65,209,255,0) 70%),
+        linear-gradient(135deg, rgba(141,123,255,.92), rgba(65,209,255,.72));
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: 0 18px 50px rgba(0,0,0,.32);
+      transform: translateY(0);
+      transition: transform .15s ease, filter .2s ease;
+      cursor:pointer;
+    }
+    .pet:active{ transform: translateY(2px) scale(.99); }
+    .pet.sad{ filter: saturate(.7) brightness(.9); }
+    .pet.sleep{ filter: saturate(.65) brightness(.8); }
+    .pet .face{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:12px;
+      padding-top:16px;
+    }
+    .eyes{
+      display:flex; gap:24px;
+    }
+    .eye{
+      width:18px; height:22px;
+      background: rgba(15,16,30,.85);
+      border-radius: 10px;
+      position:relative;
+    }
+    .eye:after{
+      content:"";
+      position:absolute;
+      width:6px; height:6px;
+      border-radius:50%;
+      background: rgba(255,255,255,.8);
+      left:3px; top:4px;
+    }
+    .mouth{
+      width:36px; height:18px;
+      border:3px solid rgba(15,16,30,.85);
+      border-top:none;
+      border-radius: 0 0 24px 24px;
+      opacity:.9;
+      transform: translateY(-4px);
+    }
+    .mouth.happy{
+      border-top:3px solid rgba(15,16,30,.85);
+      border-bottom:none;
+      border-radius: 24px 24px 0 0;
+      transform: translateY(0px);
+    }
+    .mouth.flat{
+      width:34px; height:0;
+      border:0;
+      border-top:4px solid rgba(15,16,30,.85);
+      border-radius: 999px;
+      transform: translateY(-2px);
+    }
+    .cheek{
+      position:absolute;
+      width:18px; height:10px;
+      border-radius: 999px;
+      background: rgba(255,91,122,.25);
+      top:78px;
+      filter: blur(.2px);
+    }
+    .cheek.left{ left:30px; }
+    .cheek.right{ right:30px; }
+    .cosmetic{
+      position:absolute;
+      pointer-events:none;
+    }
+    /* Cosmetic overlays */
+    .hat{
+      width:110px; height:50px;
+      left:19px; top:-18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.20));
+      border:1px solid rgba(255,255,255,.22);
+      border-radius: 18px 18px 14px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .hat:after{
+      content:"";
+      position:absolute; left:-10px; right:-10px; top:36px; height:14px;
+      background: rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+    }
+    .glasses{
+      width:118px; height:40px;
+      left:14px; top:48px;
+      border:3px solid rgba(15,16,30,.85);
+      border-radius: 16px;
+      background: rgba(255,255,255,.12);
+    }
+    .glasses:before, .glasses:after{
+      content:"";
+      position:absolute; top:7px;
+      width:40px; height:22px;
+      border:3px solid rgba(15,16,30,.85);
+      border-radius: 12px;
+      background: rgba(65,209,255,.14);
+    }
+    .glasses:before{ left:8px; }
+    .glasses:after{ right:8px; }
+    .glasses .bridge{
+      position:absolute; left:50%; top:16px;
+      width:14px; height:8px;
+      border-top:3px solid rgba(15,16,30,.85);
+      transform: translateX(-50%);
+      opacity:.9;
+    }
+    .bow{
+      width:52px; height:24px;
+      left:48px; top:96px;
+      background: rgba(255,91,122,.75);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(255,91,122,.18);
+    }
+    .bow:before, .bow:after{
+      content:"";
+      position:absolute; top:2px; width:22px; height:20px;
+      border-radius: 12px;
+      background: rgba(255,91,122,.75);
+      border:1px solid rgba(255,255,255,.18);
+    }
+    .bow:before{ left:-18px; transform: rotate(-12deg); }
+    .bow:after{ right:-18px; transform: rotate(12deg); }
+    .sparkle{
+      width:18px; height:18px;
+      left:118px; top:22px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,0) 70%);
+      filter: drop-shadow(0 8px 18px rgba(255,255,255,.18));
+      border-radius:6px;
+      transform: rotate(18deg);
+      opacity:.9;
+    }
+
+    .status{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 12px;
+      border-top:1px solid rgba(255,255,255,.06);
+      background: rgba(0,0,0,.16);
+      font-family: var(--mono);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .status span b{color:var(--text)}
+    .side{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .panel{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .panel .ptitle{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .ptitle h2{
+      margin:0;
+      font-size:13px;
+      color:var(--text);
+      letter-spacing:.2px;
+    }
+    .ptitle small{
+      color:var(--muted);
+      font-family: var(--mono);
+      font-size:11px;
+    }
+    .bars{
+      padding:10px 12px 12px 12px;
+      display:grid;
+      gap:10px;
+    }
+    .barrow{
+      display:grid;
+      grid-template-columns: 86px 1fr 44px;
+      gap:10px;
+      align-items:center;
+      font-family: var(--mono);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .bar{
+      height:10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+    }
+    .fill{
+      height:100%;
+      width:50%;
+      background: linear-gradient(90deg, rgba(70,230,162,.95), rgba(65,209,255,.8));
+      border-right:1px solid rgba(255,255,255,.16);
+      transition: width .25s ease;
+    }
+    .fill.warn{ background: linear-gradient(90deg, rgba(255,204,102,.95), rgba(255,145,80,.85)); }
+    .fill.bad{ background: linear-gradient(90deg, rgba(255,91,122,.95), rgba(255,130,160,.75)); }
+
+    .controls{
+      padding:12px 18px 16px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      border-top:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(0,0,0,.00), rgba(0,0,0,.16));
+    }
+    .btnrow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    button{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      font-weight:650;
+      letter-spacing:.2px;
+      cursor:pointer;
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+    }
+    button:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.20); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      background: linear-gradient(135deg, rgba(141,123,255,.9), rgba(65,209,255,.7));
+      border-color: rgba(255,255,255,.22);
+    }
+    button.danger{ border-color: rgba(255,91,122,.35); }
+    button.ghost{ background: rgba(0,0,0,.08); }
+    button.small{ padding:7px 10px; border-radius: 12px; font-size:12px; }
+    button:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .chat{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    input[type="text"]{
+      width:100%;
+      padding:12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+      font-family: var(--mono);
+      font-size:12px;
+    }
+    input[type="text"]::placeholder{ color: rgba(168,177,230,.7); }
+    .log{
+      margin-top:8px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      border-radius: 16px;
+      padding:10px 12px;
+      max-height: 170px;
+      overflow:auto;
+      font-family: var(--mono);
+      font-size:12px;
+      color: var(--muted);
+    }
+    .log .msg{ margin:6px 0; }
+    .log .pet{ color: rgba(65,209,255,.9); }
+    .log .you{ color: rgba(141,123,255,.95); }
+    .log .sys{ color: rgba(70,230,162,.9); }
+    .log .warn{ color: rgba(255,204,102,.95); }
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      padding:12px;
+    }
+    @media (max-width: 920px){
+      .split{grid-template-columns:1fr}
+    }
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:10px;
+    }
+    .shopitem, .gamecard{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      background: rgba(0,0,0,.14);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height: 106px;
+    }
+    .shopitem .name, .gamecard .name{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      font-weight:750;
+      letter-spacing:.2px;
+      font-size:13px;
+    }
+    .badge{
+      font-family: var(--mono);
+      font-size:11px;
+      color: var(--muted);
+      padding:4px 8px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .desc{
+      font-size:12px;
+      color: var(--muted);
+      line-height: 1.25rem;
+      flex:1;
+    }
+    .row{
+      display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.72);
+      border:1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      padding:10px 14px;
+      border-radius: 999px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      font-family: var(--mono);
+      font-size:12px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 999;
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+    .footerNote{
+      padding:12px 18px 16px 18px;
+      color: rgba(168,177,230,.75);
+      font-size:12px;
+      border-top:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding:3px 7px;
+      border-radius: 8px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+
+    /* Modal */
+    .modalback{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index: 1000;
+    }
+    .modalback.show{ display:flex; }
+    .modal{
+      width:min(920px, 100%);
+      border-radius: 20px;
+      border:1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(18,26,51,.95), rgba(15,22,48,.92));
+      box-shadow: 0 28px 90px rgba(0,0,0,.55);
+      overflow:hidden;
+      max-height: 88vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal .mhead{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .modal .mhead h3{
+      margin:0;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .modal .mbody{
+      overflow:auto;
+      padding:12px;
+    }
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .tab{
+      padding:7px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.14);
+      cursor:pointer;
+      font-family: var(--mono);
+      font-size:12px;
+      color: var(--muted);
+    }
+    .tab.active{
+      background: rgba(141,123,255,.18);
+      border-color: rgba(141,123,255,.28);
+      color: var(--text);
+    }
+
+    /* Catch game */
+    .catchArea{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      height: 280px;
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+    }
+    .treat{
+      position:absolute;
+      width:40px; height:40px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(14px 14px at 35% 35%, rgba(255,255,255,.85), rgba(255,255,255,0) 65%),
+        linear-gradient(135deg, rgba(255,204,102,.95), rgba(255,91,122,.75));
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+      cursor:pointer;
+      transform: translate(-50%,-50%);
+    }
+    .minitext{ color: var(--muted); font-size:12px; line-height:1.3rem; }
+    .hr{ height:1px; background: rgba(255,255,255,.10); margin:12px 0; }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <!-- LEFT: Main pet -->
+    <div class="card main" id="mainCard">
+      <div class="header">
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <h1>TamaBuddy</h1>
+            <div class="sub">Interact • Shop • Mini-games • Weather agent</div>
+          </div>
+        </div>
+        <div class="topstats">
+          <div class="pill">Coins: <b id="coins">0</b> 🪙</div>
+          <div class="pill">Level: <b id="level">1</b></div>
+          <div class="pill">XP: <b id="xp">0</b>/<span id="xpNext">100</span></div>
+        </div>
+      </div>
 
-<header>
-  <h1>TamaGOTCHii</h1>
-  <div>Coins: <span id="coins">0</span></div>
-</header>
+      <div class="scene">
+        <div class="petbox">
+          <div class="pet-sky"></div>
 
-<main>
-  <section id="petBox">
-    <div id="pet" data-hat="none">🐣</div>
-    <div id="bubble"></div>
+          <div class="pet-wrap">
+            <div class="pet" id="pet" title="Tap me!">
+              <div class="cosmetic hat" id="cos_hat" style="display:none"></div>
+              <div class="cosmetic" id="cos_glasses" style="display:none">
+                <div class="glasses"><div class="bridge"></div></div>
+              </div>
+              <div class="cosmetic bow" id="cos_bow" style="display:none"></div>
+              <div class="cosmetic sparkle" id="cos_sparkle" style="display:none"></div>
 
-    <div class="stats">
-      <label>Hunger <progress id="hunger" max="100"></progress></label>
-      <label>Happy <progress id="happy" max="100"></progress></label>
-      <label>Energy <progress id="energy" max="100"></progress></label>
+              <div class="face">
+                <div class="eyes">
+                  <div class="eye" id="eyeL"></div>
+                  <div class="eye" id="eyeR"></div>
+                </div>
+                <div class="cheek left"></div>
+                <div class="cheek right"></div>
+                <div class="mouth" id="mouth"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="floor"></div>
+          <div class="status">
+            <span>Name: <b id="petName"></b></span>
+            <span>State: <b id="petState"></b></span>
+            <span>Mood: <b id="petMood"></b></span>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="panel">
+            <div class="ptitle">
+              <h2>Vitals</h2>
+              <small>decays over time</small>
+            </div>
+            <div class="bars">
+              <div class="barrow"><span>Hunger</span><div class="bar"><div class="fill" id="barHunger"></div></div><span id="txtHunger">--</span></div>
+              <div class="barrow"><span>Fun</span><div class="bar"><div class="fill" id="barFun"></div></div><span id="txtFun">--</span></div>
+              <div class="barrow"><span>Clean</span><div class="bar"><div class="fill" id="barClean"></div></div><span id="txtClean">--</span></div>
+              <div class="barrow"><span>Energy</span><div class="bar"><div class="fill" id="barEnergy"></div></div><span id="txtEnergy">--</span></div>
+              <div class="barrow"><span>Health</span><div class="bar"><div class="fill" id="barHealth"></div></div><span id="txtHealth">--</span></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="ptitle">
+              <h2>Quick Actions</h2>
+              <small><span class="kbd">tap</span> pet too</small>
+            </div>
+            <div class="bars">
+              <div class="grid2">
+                <button class="primary" id="btnFeed">🍓 Feed</button>
+                <button class="primary" id="btnPlay">🧸 Play</button>
+                <button id="btnClean">🧼 Clean</button>
+                <button id="btnSleep">💤 Sleep</button>
+              </div>
+              <div class="grid2">
+                <button id="btnGames">🎮 Games</button>
+                <button id="btnShop">🛍️ Shop</button>
+              </div>
+              <div class="grid2">
+                <button class="ghost" id="btnRename">✏️ Rename</button>
+                <button class="danger" id="btnReset">♻️ Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="chat">
+          <input id="chatInput" type="text" placeholder='Ask your pet… e.g. "weather in Boston" or "how are you?"' />
+          <button class="primary" id="btnSend">Send</button>
+        </div>
+        <div class="log" id="log"></div>
+      </div>
+
+      <div class="footerNote">
+        Tips: Earn coins from games, buy cosmetics in the shop, and ask weather with:
+        <span class="kbd">weather in &lt;city&gt;</span> or <span class="kbd">weather &lt;zip&gt;</span>.
+        Everything saves automatically in your browser.
+      </div>
     </div>
 
-    <div class="buttons">
-      <button id="feedBtn">Feed</button>
-      <button id="playBtn">Play</button>
-      <button id="sleepBtn">Sleep</button>
-      <button id="gamesBtn">Games</button>
+    <!-- RIGHT: Shop + Games preview panels -->
+    <div class="card">
+      <div class="header">
+        <div class="brand">
+          <div class="logo" style="width:34px;height:34px;border-radius:11px;"></div>
+          <div>
+            <h1 style="font-size:15px;margin:0;">Hub</h1>
+            <div class="sub">Inventory • Games • Progress</div>
+          </div>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Hub Tabs">
+          <div class="tab active" id="hubTab_overview">Overview</div>
+          <div class="tab" id="hubTab_inventory">Inventory</div>
+          <div class="tab" id="hubTab_help">Help</div>
+        </div>
+      </div>
+
+      <div class="mbody" id="hubBody" style="padding:14px;">
+        <!-- Filled by JS -->
+      </div>
     </div>
-  </section>
-
-  <section>
-    <h2>Shop</h2>
-    <button data-item="hat">Buy Hat (10)</button>
-  </section>
-
-  <section>
-    <h2>Weather</h2>
-    <input id="cityInput" placeholder="Enter city" />
-    <button id="weatherBtn">Search</button>
-    <div id="weatherResult">—</div>
-  </section>
-</main>
-
-<!-- GAME MODAL -->
-<div id="modal" class="hidden">
-  <div class="modalBox">
-    <h2>Mini Game</h2>
-    <p>Click fast!</p>
-    <button id="tapBtn">TAP!</button>
-    <button id="closeModal">Close</button>
   </div>
-</div>
 
-<script src="app.js"></script>
+  <!-- Modal -->
+  <div class="modalback" id="modalBack" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Modal">
+      <div class="mhead">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="small" id="btnCloseModal">Close</button>
+      </div>
+      <div class="mbody" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /***********************
+     * TamaBuddy (single file)
+     * - localStorage persistence
+     * - shop cosmetics
+     * - games (catch + guess)
+     * - "agentic" weather via Open-Meteo (no key)
+     ************************/
+
+    // ---------- Utilities ----------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const clamp = (n, a=0, b=100) => Math.max(a, Math.min(b, n));
+    const now = () => Date.now();
+
+    function toast(msg){
+      const t = $("#toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 1700);
+    }
+
+    function logMsg(who, text, cls=""){
+      const log = $("#log");
+      const div = document.createElement("div");
+      div.className = "msg " + (cls || "");
+      div.innerHTML = `<span class="${who}">${who === "pet" ? "PET" : who === "you" ? "YOU" : "SYS"}:</span> ${escapeHtml(text)}`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+
+    // ---------- Game/Shop data ----------
+    const COSMETICS = [
+      { id:"hat",     name:"Cloud Hat",   price: 35, desc:"A cozy hat for sky vibes.", slot:"head" },
+      { id:"glasses", name:"Cool Glasses",price: 45, desc:"Instant +2 swagger.", slot:"face" },
+      { id:"bow",     name:"Pink Bow",    price: 30, desc:"Cute and confident.", slot:"neck" },
+      { id:"sparkle", name:"Star Sparkle",price: 55, desc:"Shines when mood is high.", slot:"aura" },
+    ];
+
+    const DEFAULT_STATE = () => ({
+      version: 1,
+      pet: {
+        name: "Nibble",
+        state: "awake", // awake | sleeping
+        hunger: 78,
+        fun: 70,
+        clean: 72,
+        energy: 76,
+        health: 85,
+        mood: "Happy",
+        level: 1,
+        xp: 0,
+        xpNext: 100,
+        coins: 25,
+        cosmeticsOwned: ["hat"], // start with one
+        cosmeticsEquipped: { head:"hat", face:null, neck:null, aura:null },
+        lastTick: now()
+      }
+    });
+
+    const STORAGE_KEY = "tamabuddy_state_v1";
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return DEFAULT_STATE();
+        const s = JSON.parse(raw);
+
+        // Basic migration / safety
+        if(!s.pet) return DEFAULT_STATE();
+        if(!s.pet.cosmeticsEquipped) s.pet.cosmeticsEquipped = { head:null, face:null, neck:null, aura:null };
+        if(!Array.isArray(s.pet.cosmeticsOwned)) s.pet.cosmeticsOwned = [];
+        if(!s.pet.lastTick) s.pet.lastTick = now();
+
+        // Clamp vitals
+        ["hunger","fun","clean","energy","health"].forEach(k => s.pet[k] = clamp(Number(s.pet[k] ?? 50)));
+        s.pet.level = Math.max(1, Number(s.pet.level||1));
+        s.pet.xp = Math.max(0, Number(s.pet.xp||0));
+        s.pet.xpNext = Math.max(50, Number(s.pet.xpNext||100));
+        s.pet.coins = Math.max(0, Number(s.pet.coins||0));
+        s.pet.state = (s.pet.state === "sleeping") ? "sleeping" : "awake";
+        s.pet.name = String(s.pet.name || "Nibble").slice(0,18);
+
+        return s;
+      }catch(e){
+        return DEFAULT_STATE();
+      }
+    }
+
+    function saveState(){
+      state.pet.lastTick = now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    // ---------- Core pet logic ----------
+    let state = loadState();
+
+    function computeMood(p){
+      // Weighted score
+      const score = (p.hunger*0.22 + p.fun*0.26 + p.clean*0.18 + p.energy*0.18 + p.health*0.16);
+      if(p.state === "sleeping"){
+        return score >= 55 ? "Resting" : "Tired";
+      }
+      if(score >= 80) return "Ecstatic";
+      if(score >= 65) return "Happy";
+      if(score >= 45) return "Okay";
+      if(score >= 28) return "Grumpy";
+      return "Miserable";
+    }
+
+    function applyOfflineDecay(){
+      const p = state.pet;
+      const dtMs = now() - (p.lastTick || now());
+      const dtMin = Math.max(0, dtMs / 60000);
+
+      // decay rates per minute
+      // sleeping slows decay & restores energy a bit
+      const sleeping = (p.state === "sleeping");
+      const hungerRate = sleeping ? 0.35 : 0.65;
+      const funRate    = sleeping ? 0.18 : 0.45;
+      const cleanRate  = sleeping ? 0.25 : 0.55;
+      const energyRate = sleeping ? -0.65 : 0.55; // negative means increase
+      const healthRate = 0.18;
+
+      p.hunger = clamp(p.hunger - hungerRate*dtMin);
+      p.fun    = clamp(p.fun    - funRate*dtMin);
+      p.clean  = clamp(p.clean  - cleanRate*dtMin);
+      p.energy = clamp(p.energy - energyRate*dtMin); // subtract negative => add when sleeping
+
+      // health depends on other stats
+      const bad = (
+        (p.hunger < 25) +
+        (p.fun < 25) +
+        (p.clean < 25) +
+        (p.energy < 25)
+      );
+      // If multiple needs are low, health drops faster
+      const healthDrop = (bad >= 2 ? (0.55*dtMin) : (healthRate*dtMin));
+      p.health = clamp(p.health - healthDrop);
+
+      if(p.health <= 10 && p.state !== "sleeping"){
+        // auto "collapse" into sleep if health very low
+        p.state = "sleeping";
+        logMsg("sys", `${p.name} got exhausted and fell asleep.`, "warn");
+      }
+
+      p.mood = computeMood(p);
+      saveState();
+    }
+
+    function tick(){
+      // Per-second gentle changes
+      const p = state.pet;
+
+      const sleeping = (p.state === "sleeping");
+      // per second rates
+      const hungerRate = sleeping ? 0.005 : 0.010;
+      const funRate    = sleeping ? 0.003 : 0.007;
+      const cleanRate  = sleeping ? 0.004 : 0.009;
+      const energyRate = sleeping ? -0.020 : 0.010; // sleeping restores energy
+      p.hunger = clamp(p.hunger - hungerRate);
+      p.fun    = clamp(p.fun    - funRate);
+      p.clean  = clamp(p.clean  - cleanRate);
+      p.energy = clamp(p.energy - energyRate);
+
+      // health slowly reacts
+      const bad = (
+        (p.hunger < 20) +
+        (p.fun < 20) +
+        (p.clean < 20) +
+        (p.energy < 20)
+      );
+      if(bad >= 2) p.health = clamp(p.health - 0.02);
+      else if(p.health < 100 && !sleeping && p.hunger > 40 && p.fun > 40 && p.clean > 40 && p.energy > 40){
+        p.health = clamp(p.health + 0.01);
+      }
+
+      // wake up if energy full
+      if(sleeping && p.energy >= 95){
+        p.state = "awake";
+        logMsg("pet", "I’m awake! That was a good nap. 😄");
+      }
+
+      p.mood = computeMood(p);
+      render();
+      // save less frequently (every ~10s)
+      if(Math.floor(now()/10000) !== Math.floor((p.lastTick||0)/10000)){
+        saveState();
+      }
+    }
+
+    function addXP(amount){
+      const p = state.pet;
+      p.xp += amount;
+      while(p.xp >= p.xpNext){
+        p.xp -= p.xpNext;
+        p.level += 1;
+        p.xpNext = Math.floor(p.xpNext * 1.18 + 20);
+        p.coins += 20;
+        logMsg("sys", `${p.name} leveled up to ${p.level}! +20 coins`, "sys");
+        toast(`Level up! ${p.level}`);
+      }
+    }
+
+    function spendCoins(amount){
+      const p = state.pet;
+      if(p.coins < amount) return false;
+      p.coins -= amount;
+      return true;
+    }
+
+    function rewardCoins(amount){
+      const p = state.pet;
+      p.coins += amount;
+    }
+
+    // ---------- Rendering ----------
+    function setBar(idFill, idTxt, value){
+      const fill = $(idFill);
+      const txt = $(idTxt);
+      fill.style.width = `${value}%`;
+      txt.textContent = `${Math.round(value)}`;
+      fill.classList.remove("warn","bad");
+      if(value < 30) fill.classList.add("bad");
+      else if(value < 55) fill.classList.add("warn");
+    }
+
+    function renderCosmetics(){
+      const eq = state.pet.cosmeticsEquipped;
+      $("#cos_hat").style.display = (eq.head === "hat") ? "block" : "none";
+      $("#cos_glasses").style.display = (eq.face === "glasses") ? "block" : "none";
+      $("#cos_bow").style.display = (eq.neck === "bow") ? "block" : "none";
+      // sparkle: only show if equipped AND mood high enough (cute effect)
+      const showSparkle = (eq.aura === "sparkle") && ["Happy","Ecstatic","Resting"].includes(state.pet.mood);
+      $("#cos_sparkle").style.display = showSparkle ? "block" : "none";
+    }
+
+    function renderFace(){
+      const p = state.pet;
+      const petEl = $("#pet");
+      petEl.classList.toggle("sleep", p.state === "sleeping");
+      petEl.classList.toggle("sad", ["Grumpy","Miserable","Tired"].includes(p.mood));
+
+      const mouth = $("#mouth");
+      mouth.className = "mouth";
+      if(p.state === "sleeping"){
+        mouth.classList.add("flat");
+      }else if(["Ecstatic","Happy"].includes(p.mood)){
+        mouth.classList.add("happy");
+      }else if(["Okay"].includes(p.mood)){
+        // default smile
+      }else{
+        mouth.classList.add("flat");
+      }
+    }
+
+    function render(){
+      const p = state.pet;
+      $("#petName").textContent = p.name;
+      $("#petState").textContent = (p.state === "sleeping" ? "Sleeping" : "Awake");
+      $("#petMood").textContent = p.mood;
+
+      $("#coins").textContent = p.coins;
+      $("#level").textContent = p.level;
+      $("#xp").textContent = p.xp;
+      $("#xpNext").textContent = p.xpNext;
+
+      setBar("#barHunger","#txtHunger", p.hunger);
+      setBar("#barFun","#txtFun", p.fun);
+      setBar("#barClean","#txtClean", p.clean);
+      setBar("#barEnergy","#txtEnergy", p.energy);
+      setBar("#barHealth","#txtHealth", p.health);
+
+      renderFace();
+      renderCosmetics();
+      renderHub(); // update right panel
+    }
+
+    // ---------- Interactions ----------
+    function petTap(){
+      const p = state.pet;
+      if(p.state === "sleeping"){
+        logMsg("pet", "Zzz… (I’m sleeping. Try later.)");
+        toast("Sleeping…");
+        return;
+      }
+      // a little affection
+      p.fun = clamp(p.fun + 3);
+      p.clean = clamp(p.clean - 0.5); // you touched it :P
+      addXP(3);
+      p.mood = computeMood(p);
+      logMsg("pet", pick([
+        "Hehe! That tickles! ✨",
+        "Boop accepted.",
+        "Hi hi! 👋",
+        "I feel loved. 😄"
+      ]));
+      render();
+    }
+
+    function doFeed(){
+      const p = state.pet;
+      if(p.state === "sleeping"){
+        logMsg("pet","(sleepy) Maybe later…");
+        return;
+      }
+      p.hunger = clamp(p.hunger + 18);
+      p.health = clamp(p.health + 3);
+      addXP(6);
+      logMsg("pet", pick([
+        "Yum! I needed that. 🍓",
+        "Nom nom nom!",
+        "Snack time is the best time."
+      ]));
+      toast("+Hunger");
+      render();
+    }
+
+    function doPlay(){
+      const p = state.pet;
+      if(p.state === "sleeping"){
+        logMsg("pet","I’m recharging… let’s play when I’m awake.");
+        return;
+      }
+      p.fun = clamp(p.fun + 16);
+      p.energy = clamp(p.energy - 8);
+      addXP(8);
+      logMsg("pet", pick([
+        "Whee! Let’s do that again! 🧸",
+        "That was fun!",
+        "I’m having a blast!"
+      ]));
+      toast("+Fun");
+      render();
+    }
+
+    function doClean(){
+      const p = state.pet;
+      p.clean = clamp(p.clean + 22);
+      addXP(5);
+      logMsg("pet", pick([
+        "Sparkly clean! 🧼",
+        "Ahhh fresh!",
+        "I smell amazing now."
+      ]));
+      toast("+Clean");
+      render();
+    }
+
+    function doSleep(){
+      const p = state.pet;
+      if(p.state === "sleeping"){
+        p.state = "awake";
+        logMsg("pet","I’m up! 😄");
+      }else{
+        p.state = "sleeping";
+        logMsg("pet","Going to sleep… zzz 💤");
+      }
+      p.mood = computeMood(p);
+      render();
+    }
+
+    function doRename(){
+      const name = prompt("Name your pet (max 18 chars):", state.pet.name);
+      if(name === null) return;
+      state.pet.name = String(name).trim().slice(0,18) || state.pet.name;
+      logMsg("sys", `Pet renamed to ${state.pet.name}.`, "sys");
+      render();
+      saveState();
+    }
+
+    function doReset(){
+      if(!confirm("Reset TamaBuddy? This will erase progress & inventory.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = DEFAULT_STATE();
+      $("#log").innerHTML = "";
+      logMsg("sys","Fresh start! Your new pet is ready.", "sys");
+      render();
+    }
+
+    // ---------- Modal system ----------
+    function openModal(title, contentNode){
+      $("#modalTitle").textContent = title;
+      const body = $("#modalBody");
+      body.innerHTML = "";
+      body.appendChild(contentNode);
+      $("#modalBack").classList.add("show");
+      $("#modalBack").setAttribute("aria-hidden","false");
+    }
+    function closeModal(){
+      $("#modalBack").classList.remove("show");
+      $("#modalBack").setAttribute("aria-hidden","true");
+    }
+    $("#btnCloseModal").addEventListener("click", closeModal);
+    $("#modalBack").addEventListener("click", (e)=>{
+      if(e.target.id === "modalBack") closeModal();
+    });
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape") closeModal();
+    });
+
+    // ---------- Shop ----------
+    function buildShopUI(){
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <div class="minitext">
+          Buy cosmetics with coins, then equip them from your inventory.
+        </div>
+        <div class="hr"></div>
+        <div class="grid2" id="shopGrid"></div>
+        <div class="hr"></div>
+        <div class="minitext">
+          Equipped items show on your pet immediately. Sparkle only appears when mood is high.
+        </div>
+      `;
+      const grid = wrap.querySelector("#shopGrid");
+
+      COSMETICS.forEach(item=>{
+        const owned = state.pet.cosmeticsOwned.includes(item.id);
+        const card = document.createElement("div");
+        card.className = "shopitem";
+        card.innerHTML = `
+          <div class="name">
+            <span>${item.name}</span>
+            <span class="badge">${item.price} 🪙</span>
+          </div>
+          <div class="desc">${item.desc}</div>
+          <div class="row">
+            <span class="badge">Slot: ${item.slot}</span>
+            <button class="small ${owned ? "ghost" : "primary"}" ${owned ? "disabled" : ""}>
+              ${owned ? "Owned" : "Buy"}
+            </button>
+          </div>
+        `;
+        const btn = card.querySelector("button");
+        btn.addEventListener("click", ()=>{
+          if(state.pet.cosmeticsOwned.includes(item.id)) return;
+          if(!spendCoins(item.price)){
+            toast("Not enough coins");
+            logMsg("sys","You don’t have enough coins for that.", "warn");
+            return;
+          }
+          state.pet.cosmeticsOwned.push(item.id);
+          addXP(10);
+          logMsg("sys", `Purchased: ${item.name}.`, "sys");
+          toast("Purchased!");
+          saveState();
+          closeModal();
+          openShop();
+          render();
+        });
+        grid.appendChild(card);
+      });
+
+      return wrap;
+    }
+
+    function openShop(){
+      openModal("Shop", buildShopUI());
+    }
+
+    // ---------- Inventory (equip/unequip) ----------
+    function buildInventoryUI(){
+      const wrap = document.createElement("div");
+      const owned = state.pet.cosmeticsOwned.slice();
+
+      const eq = state.pet.cosmeticsEquipped;
+      const slots = [
+        {slot:"head", label:"Head"},
+        {slot:"face", label:"Face"},
+        {slot:"neck", label:"Neck"},
+        {slot:"aura", label:"Aura"},
+      ];
+
+      wrap.innerHTML = `
+        <div class="minitext">
+          Click an owned item to equip it. Click “Unequip” to clear a slot.
+        </div>
+        <div class="hr"></div>
+        <div class="grid2" id="invSlots"></div>
+        <div class="hr"></div>
+        <div class="grid2" id="invOwned"></div>
+      `;
+
+      const slotGrid = wrap.querySelector("#invSlots");
+      slots.forEach(s=>{
+        const equippedId = eq[s.slot];
+        const equippedName = equippedId ? COSMETICS.find(c=>c.id===equippedId)?.name : "None";
+        const card = document.createElement("div");
+        card.className = "shopitem";
+        card.innerHTML = `
+          <div class="name">
+            <span>${s.label}</span>
+            <span class="badge">${equippedName}</span>
+          </div>
+          <div class="desc">Slot controls for ${s.label.toLowerCase()} cosmetics.</div>
+          <div class="row">
+            <button class="small danger">Unequip</button>
+          </div>
+        `;
+        card.querySelector("button").addEventListener("click", ()=>{
+          state.pet.cosmeticsEquipped[s.slot] = null;
+          saveState();
+          render();
+          toast("Unequipped");
+          closeModal();
+          openInventory();
+        });
+        slotGrid.appendChild(card);
+      });
+
+      const ownedGrid = wrap.querySelector("#invOwned");
+      const ownedItems = COSMETICS.filter(c=>owned.includes(c.id));
+
+      if(ownedItems.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "shopitem";
+        empty.style.gridColumn = "1 / -1";
+        empty.innerHTML = `<div class="name"><span>No items yet</span><span class="badge">🛍️</span></div>
+          <div class="desc">Play games to earn coins, then buy cosmetics!</div>
+          <div class="row"><button class="small primary" id="goShop">Open Shop</button></div>`;
+        empty.querySelector("#goShop").addEventListener("click", ()=>{ closeModal(); openShop(); });
+        ownedGrid.appendChild(empty);
+      }else{
+        ownedItems.forEach(item=>{
+          const card = document.createElement("div");
+          card.className = "shopitem";
+          const isEquipped = Object.values(eq).includes(item.id);
+          card.innerHTML = `
+            <div class="name">
+              <span>${item.name}</span>
+              <span class="badge">Owned</span>
+            </div>
+            <div class="desc">${item.desc}</div>
+            <div class="row">
+              <span class="badge">Slot: ${item.slot}</span>
+              <button class="small ${isEquipped ? "ghost" : "primary"}">
+                ${isEquipped ? "Equipped" : "Equip"}
+              </button>
+            </div>
+          `;
+          const btn = card.querySelector("button");
+          btn.addEventListener("click", ()=>{
+            if(isEquipped) return;
+            state.pet.cosmeticsEquipped[item.slot] = item.id;
+            saveState();
+            render();
+            toast("Equipped!");
+            closeModal();
+            openInventory();
+          });
+          ownedGrid.appendChild(card);
+        });
+      }
+      return wrap;
+    }
+
+    function openInventory(){
+      openModal("Inventory", buildInventoryUI());
+    }
+
+    // ---------- Games ----------
+    function buildGamesUI(){
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <div class="minitext">
+          Win coins to buy cosmetics. Games also grant XP.
+        </div>
+        <div class="hr"></div>
+        <div class="grid2" id="gamesGrid"></div>
+      `;
+      const grid = wrap.querySelector("#gamesGrid");
+
+      const games = [
+        { id:"catch", name:"Catch the Treat", desc:"Click the treat before it disappears. 10 rounds.", reward:"up to 40 🪙" },
+        { id:"guess", name:"Guess the Number", desc:"Guess 1–20. Fewer guesses = more coins.", reward:"up to 30 🪙" },
+      ];
+
+      games.forEach(g=>{
+        const card = document.createElement("div");
+        card.className = "gamecard";
+        card.innerHTML = `
+          <div class="name">
+            <span>${g.name}</span>
+            <span class="badge">${g.reward}</span>
+          </div>
+          <div class="desc">${g.desc}</div>
+          <div class="row">
+            <button class="small primary">Play</button>
+          </div>
+        `;
+        card.querySelector("button").addEventListener("click", ()=>{
+          closeModal();
+          if(g.id === "catch") openCatchGame();
+          if(g.id === "guess") openGuessGame();
+        });
+        grid.appendChild(card);
+      });
+
+      return wrap;
+    }
+
+    function openGames(){
+      openModal("Games", buildGamesUI());
+    }
+
+    // ---- Game 1: Catch the Treat ----
+    function openCatchGame(){
+      const wrap = document.createElement("div");
+      let round = 0;
+      let score = 0;
+      let active = true;
+      let timeoutId = null;
+
+      wrap.innerHTML = `
+        <div class="minitext">
+          Click the treat as fast as you can. There are 10 rounds.
+        </div>
+        <div class="hr"></div>
+        <div class="row">
+          <span class="badge">Round: <b id="r">0</b>/10</span>
+          <span class="badge">Hits: <b id="s">0</b></span>
+          <span class="badge">Potential reward: <b id="rew">0</b> 🪙</span>
+          <button class="small danger" id="quit">Quit</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="catchArea" id="area"></div>
+        <div style="height:10px"></div>
+        <div class="minitext" id="hint">Ready…</div>
+      `;
+
+      const area = wrap.querySelector("#area");
+      const rEl = wrap.querySelector("#r");
+      const sEl = wrap.querySelector("#s");
+      const rewEl = wrap.querySelector("#rew");
+      const hint = wrap.querySelector("#hint");
+      wrap.querySelector("#quit").addEventListener("click", ()=>{
+        active = false;
+        if(timeoutId) clearTimeout(timeoutId);
+        closeModal();
+        toast("Game ended");
+      });
+
+      function rewardPreview(){
+        // reward curve: up to 40 coins
+        return Math.min(40, score*4);
+      }
+
+      function spawn(){
+        if(!active) return;
+        round++;
+        rEl.textContent = round;
+        hint.textContent = "Click it!";
+        area.innerHTML = "";
+        const t = document.createElement("div");
+        t.className = "treat";
+        const x = 10 + Math.random()*80;
+        const y = 12 + Math.random()*76;
+        t.style.left = x + "%";
+        t.style.top = y + "%";
+        area.appendChild(t);
+
+        let clicked = false;
+
+        t.addEventListener("click", ()=>{
+          if(clicked) return;
+          clicked = true;
+          score++;
+          sEl.textContent = score;
+          rewEl.textContent = rewardPreview();
+          hint.textContent = "Nice!";
+          area.innerHTML = "";
+          next();
+        });
+
+        // disappear after random time
+        const disappearMs = 700 + Math.random()*650;
+        timeoutId = setTimeout(()=>{
+          if(clicked) return;
+          hint.textContent = "Miss…";
+          area.innerHTML = "";
+          next();
+        }, disappearMs);
+      }
+
+      function next(){
+        if(timeoutId) clearTimeout(timeoutId);
+        if(round >= 10){
+          end();
+          return;
+        }
+        timeoutId = setTimeout(spawn, 380);
+      }
+
+      function end(){
+        active = false;
+        area.innerHTML = "";
+        const coinsWon = rewardPreview();
+        rewardCoins(coinsWon);
+        addXP(15 + score*2);
+        state.pet.fun = clamp(state.pet.fun + 8);
+        state.pet.energy = clamp(state.pet.energy - 6);
+        state.pet.mood = computeMood(state.pet);
+
+        saveState();
+        render();
+
+        logMsg("sys", `Catch the Treat results: ${score}/10 hits. +${coinsWon} coins.`, "sys");
+        hint.innerHTML = `Done! You hit <b>${score}</b>/10. Reward: <b>${coinsWon}</b> 🪙`;
+        toast("Coins earned!");
+      }
+
+      openModal("Game: Catch the Treat", wrap);
+      rewEl.textContent = rewardPreview();
+      timeoutId = setTimeout(spawn, 450);
+    }
+
+    // ---- Game 2: Guess the Number ----
+    function openGuessGame(){
+      const wrap = document.createElement("div");
+      const secret = 1 + Math.floor(Math.random()*20);
+      let guesses = 0;
+      let done = false;
+
+      wrap.innerHTML = `
+        <div class="minitext">
+          I picked a number from <b>1</b> to <b>20</b>. Fewer guesses = more coins.
+        </div>
+        <div class="hr"></div>
+        <div class="row">
+          <span class="badge">Guesses: <b id="g">0</b></span>
+          <span class="badge">Max reward: <b>30</b> 🪙</span>
+          <button class="small danger" id="quit">Quit</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="panel" style="padding:12px;">
+          <div class="chat">
+            <input type="text" id="guessInput" placeholder="Type a number 1-20" />
+            <button class="primary" id="submitGuess">Guess</button>
+          </div>
+          <div class="log" id="glog" style="margin-top:10px; max-height:190px;"></div>
+        </div>
+      `;
+
+      const gEl = wrap.querySelector("#g");
+      const input = wrap.querySelector("#guessInput");
+      const glog = wrap.querySelector("#glog");
+      const submit = wrap.querySelector("#submitGuess");
+
+      const gLog = (text, cls="")=>{
+        const div = document.createElement("div");
+        div.className = "msg " + cls;
+        div.textContent = text;
+        glog.appendChild(div);
+        glog.scrollTop = glog.scrollHeight;
+      };
+
+      function finish(win){
+        done = true;
+        submit.disabled = true;
+        input.disabled = true;
+
+        if(!win){
+          gLog("Game ended. No reward.", "warn");
+          toast("Quit game");
+          return;
+        }
+        // reward: 30 coins at 1 guess, then down to 6 at 10+ guesses
+        const coinsWon = Math.max(6, Math.floor(30 - (guesses-1)*3));
+        rewardCoins(coinsWon);
+        addXP(18);
+        state.pet.fun = clamp(state.pet.fun + 10);
+        state.pet.energy = clamp(state.pet.energy - 4);
+        saveState();
+        render();
+        gLog(`Correct! The number was ${secret}. +${coinsWon} coins.`, "sys");
+        logMsg("sys", `Guess game: ${guesses} guesses. +${coinsWon} coins.`, "sys");
+        toast("Coins earned!");
+      }
+
+      function handleGuess(){
+        if(done) return;
+        const val = Number(String(input.value).trim());
+        if(!Number.isFinite(val) || val < 1 || val > 20){
+          gLog("Enter a valid number from 1 to 20.", "warn");
+          return;
+        }
+        guesses++;
+        gEl.textContent = guesses;
+
+        if(val === secret){
+          gLog(`Guess #${guesses}: ${val} ✅`);
+          finish(true);
+        }else if(val < secret){
+          gLog(`Guess #${guesses}: ${val} → Too low`);
+        }else{
+          gLog(`Guess #${guesses}: ${val} → Too high`);
+        }
+        input.value = "";
+        input.focus();
+      }
+
+      wrap.querySelector("#quit").addEventListener("click", ()=>{
+        done = true;
+        closeModal();
+      });
+
+      submit.addEventListener("click", handleGuess);
+      input.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter") handleGuess();
+      });
+
+      openModal("Game: Guess the Number", wrap);
+      input.focus();
+    }
+
+    // ---------- Weather agent ----------
+    async function fetchJSON(url){
+      const res = await fetch(url);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    function extractWeatherQuery(text){
+      // Examples:
+      // "weather in Boston" | "check weather for Tokyo" | "weather 10001" | "weather: London"
+      const t = text.toLowerCase().trim();
+      const m = t.match(/(?:weather|forecast)\s*(?:in|for|at|:)?\s*(.+)$/i);
+      if(!m) return null;
+      return m[1].trim();
+    }
+
+    function isZip(q){
+      return /^[0-9]{5}(-[0-9]{4})?$/.test(q.trim());
+    }
+
+    async function getWeatherForPlace(place){
+      // Use Open-Meteo geocoding -> then forecast.
+      // No API key required.
+      const q = encodeURIComponent(place);
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=1&language=en&format=json`;
+      const geo = await fetchJSON(geoUrl);
+      if(!geo.results || !geo.results.length) throw new Error("Location not found.");
+      const r = geo.results[0];
+      const { latitude, longitude, name, country, admin1, timezone } = r;
+
+      const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=${encodeURIComponent(timezone || "auto")}`;
+      const fc = await fetchJSON(forecastUrl);
+
+      return { place: `${name}${admin1 ? ", " + admin1 : ""}, ${country}`, geo:r, fc };
+    }
+
+    function weatherCodeToText(code){
+      // Simplified Open-Meteo weather code mapping
+      const map = new Map([
+        [0,"Clear sky"],
+        [1,"Mainly clear"], [2,"Partly cloudy"], [3,"Overcast"],
+        [45,"Fog"], [48,"Depositing rime fog"],
+        [51,"Light drizzle"], [53,"Drizzle"], [55,"Dense drizzle"],
+        [61,"Slight rain"], [63,"Rain"], [65,"Heavy rain"],
+        [71,"Slight snow"], [73,"Snow"], [75,"Heavy snow"],
+        [80,"Rain showers"], [81,"Rain showers"], [82,"Violent showers"],
+        [95,"Thunderstorm"], [96,"Thunderstorm + hail"], [99,"Thunderstorm + hail"]
+      ]);
+      return map.get(code) || `Weather code ${code}`;
+    }
+
+    async function handleWeather(place){
+      const p = state.pet;
+      logMsg("pet", "Okay! Checking the weather… ☁️");
+      try{
+        const { place: nicePlace, fc } = await getWeatherForPlace(place);
+
+        const cur = fc.current;
+        const daily = fc.daily;
+        const todayMax = daily?.temperature_2m_max?.[0];
+        const todayMin = daily?.temperature_2m_min?.[0];
+        const precip = daily?.precipitation_sum?.[0];
+
+        const summary =
+          `Weather for ${nicePlace}: ` +
+          `${Math.round(cur.temperature_2m)}°C (feels ${Math.round(cur.apparent_temperature)}°C), ` +
+          `${weatherCodeToText(cur.weather_code)}, wind ${Math.round(cur.wind_speed_10m)} km/h. ` +
+          `Today: ${Math.round(todayMin)}–${Math.round(todayMax)}°C, precip ${Math.round((precip||0)*10)/10} mm.`;
+
+        logMsg("pet", summary);
+
+        // Pet reacts a bit (fun + xp)
+        p.fun = clamp(p.fun + 2);
+        addXP(5);
+        render();
+        saveState();
+      }catch(e){
+        logMsg("pet", `Hmm… I couldn’t get weather for "${place}". Try a city like "Boston" or "Tokyo".`, "warn");
+      }
+    }
+
+    // ---------- Chat agent behavior ----------
+    async function handleChat(text){
+      const t = text.trim();
+      if(!t) return;
+
+      logMsg("you", t);
+
+      // Commands
+      const wq = extractWeatherQuery(t);
+      if(wq){
+        await handleWeather(wq);
+        return;
+      }
+
+      const lower = t.toLowerCase();
+      const p = state.pet;
+
+      if(lower.includes("how are you") || lower.includes("status")){
+        logMsg("pet", `I’m ${p.mood} and ${p.state === "sleeping" ? "sleeping" : "awake"}! Hunger ${Math.round(p.hunger)}, Fun ${Math.round(p.fun)}, Clean ${Math.round(p.clean)}, Energy ${Math.round(p.energy)}.`);
+        return;
+      }
+
+      if(lower.includes("feed")){
+        doFeed(); return;
+      }
+      if(lower.includes("play")){
+        doPlay(); return;
+      }
+      if(lower.includes("clean")){
+        doClean(); return;
+      }
+      if(lower.includes("sleep")){
+        doSleep(); return;
+      }
+      if(lower.includes("shop")){
+        openShop(); return;
+      }
+      if(lower.includes("games") || lower.includes("game")){
+        openGames(); return;
+      }
+
+      // Small talk
+      const responses = [];
+      if(p.state === "sleeping"){
+        responses.push("Zzz… (Try 'wake up' or click Sleep.)");
+      }else{
+        responses.push(pick([
+          "Tell me what you want to do: feed, play, clean, sleep, shop, or games!",
+          "I’m listening 👀 Try: “weather in New York”",
+          "Let’s earn coins and get something cute from the shop!",
+          "If you want, ask: “weather in Tokyo” ☁️",
+          "Tap me for a tiny fun boost!"
+        ]));
+      }
+      logMsg("pet", responses[0]);
+    }
+
+    // ---------- Right hub rendering ----------
+    function renderHub(){
+      const body = $("#hubBody");
+      const activeTab = document.querySelector(".tab.active")?.id || "hubTab_overview";
+
+      const p = state.pet;
+
+      if(activeTab === "hubTab_overview"){
+        body.innerHTML = `
+          <div class="panel" style="padding:12px;">
+            <div class="row">
+              <div>
+                <div style="font-weight:800;letter-spacing:.2px;">${escapeHtml(p.name)}'s Summary</div>
+                <div class="minitext">Mood: <b>${p.mood}</b> • State: <b>${p.state === "sleeping" ? "Sleeping" : "Awake"}</b></div>
+              </div>
+              <div class="badge">Coins: ${p.coins} 🪙</div>
+            </div>
+            <div class="hr"></div>
+            <div class="grid3">
+              <div class="shopitem">
+                <div class="name"><span>Shop</span><span class="badge">cosmetics</span></div>
+                <div class="desc">Buy hats, glasses, and more.</div>
+                <div class="row"><button class="small primary" id="hubShop">Open</button></div>
+              </div>
+              <div class="shopitem">
+                <div class="name"><span>Games</span><span class="badge">coins</span></div>
+                <div class="desc">Play mini-games to earn rewards.</div>
+                <div class="row"><button class="small primary" id="hubGames">Play</button></div>
+              </div>
+              <div class="shopitem">
+                <div class="name"><span>Inventory</span><span class="badge">equip</span></div>
+                <div class="desc">Equip cosmetics you own.</div>
+                <div class="row"><button class="small primary" id="hubInv">Manage</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="panel" style="padding:12px;">
+            <div style="font-weight:800;letter-spacing:.2px;">Agentic Weather</div>
+            <div class="minitext" style="margin-top:6px;">
+              Ask in chat: <span class="kbd">weather in Boston</span>, <span class="kbd">forecast for Tokyo</span>.
+              Uses Open-Meteo (no key).
+            </div>
+          </div>
+        `;
+        $("#hubShop").addEventListener("click", openShop);
+        $("#hubGames").addEventListener("click", openGames);
+        $("#hubInv").addEventListener("click", openInventory);
+        return;
+      }
+
+      if(activeTab === "hubTab_inventory"){
+        const owned = p.cosmeticsOwned.map(id => COSMETICS.find(c=>c.id===id)?.name || id);
+        const eq = p.cosmeticsEquipped;
+        body.innerHTML = `
+          <div class="panel" style="padding:12px;">
+            <div class="row">
+              <div>
+                <div style="font-weight:800;letter-spacing:.2px;">Inventory</div>
+                <div class="minitext">Owned items: <b>${owned.length}</b></div>
+              </div>
+              <button class="small primary" id="openInv">Open Inventory</button>
+            </div>
+            <div class="hr"></div>
+            <div class="minitext">
+              <b>Equipped:</b><br/>
+              Head: <span class="kbd">${eq.head || "None"}</span> &nbsp;
+              Face: <span class="kbd">${eq.face || "None"}</span> &nbsp;
+              Neck: <span class="kbd">${eq.neck || "None"}</span> &nbsp;
+              Aura: <span class="kbd">${eq.aura || "None"}</span>
+            </div>
+            <div class="hr"></div>
+            <div class="minitext">
+              <b>Owned list:</b> ${owned.length ? owned.map(x=>`<span class="badge">${escapeHtml(x)}</span>`).join(" ") : "None yet"}
+            </div>
+          </div>
+        `;
+        $("#openInv").addEventListener("click", openInventory);
+        return;
+      }
+
+      // Help tab
+      body.innerHTML = `
+        <div class="panel" style="padding:12px;">
+          <div style="font-weight:800;letter-spacing:.2px;">Help</div>
+          <div class="hr"></div>
+          <div class="minitext">
+            <b>Actions:</b> Feed, Play, Clean, Sleep. Needs decay over time.<br/>
+            <b>Coins:</b> Earn from Games. Spend in Shop for cosmetics.<br/>
+            <b>Equip:</b> Open Inventory to equip/unequip.<br/>
+            <b>Weather agent:</b> In chat, type <span class="kbd">weather in &lt;city&gt;</span> or <span class="kbd">forecast for &lt;city&gt;</span>.<br/>
+            <b>Reset:</b> Use Reset to wipe progress.
+          </div>
+        </div>
+      `;
+    }
+
+    function setActiveTab(tabId){
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      $("#"+tabId).classList.add("active");
+      renderHub();
+    }
+
+    $("#hubTab_overview").addEventListener("click", ()=>setActiveTab("hubTab_overview"));
+    $("#hubTab_inventory").addEventListener("click", ()=>setActiveTab("hubTab_inventory"));
+    $("#hubTab_help").addEventListener("click", ()=>setActiveTab("hubTab_help"));
+
+    // ---------- Wire up buttons ----------
+    $("#pet").addEventListener("click", petTap);
+    $("#btnFeed").addEventListener("click", doFeed);
+    $("#btnPlay").addEventListener("click", doPlay);
+    $("#btnClean").addEventListener("click", doClean);
+    $("#btnSleep").addEventListener("click", doSleep);
+    $("#btnShop").addEventListener("click", openShop);
+    $("#btnGames").addEventListener("click", openGames);
+    $("#btnRename").addEventListener("click", doRename);
+    $("#btnReset").addEventListener("click", doReset);
+
+    $("#btnSend").addEventListener("click", async ()=>{
+      const inp = $("#chatInput");
+      const text = inp.value;
+      inp.value = "";
+      await handleChat(text);
+    });
+    $("#chatInput").addEventListener("keydown", async (e)=>{
+      if(e.key === "Enter"){
+        const inp = $("#chatInput");
+        const text = inp.value;
+        inp.value = "";
+        await handleChat(text);
+      }
+    });
+
+    // ---------- Init ----------
+    (function init(){
+      applyOfflineDecay();
+      $("#log").innerHTML = "";
+      logMsg("sys", "Welcome to TamaBuddy. Play games to earn coins. Ask: “weather in Boston”.", "sys");
+      render();
+      setInterval(tick, 1000);
+    })();
+  </script>
 </body>
 </html>
